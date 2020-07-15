@@ -39,7 +39,6 @@ const Dashboard: React.FC = () => {
 
       setProducts(response.data);
     }
-
     loadProducts();
   }, []);
 

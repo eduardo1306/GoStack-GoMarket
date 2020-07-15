@@ -30,22 +30,31 @@ const CartProvider: React.FC = ({ children }) => {
 
   useEffect(() => {
     async function loadProducts(): Promise<void> {
-      try {
-        const productsFromAsyncStorage = await AsyncStorage.getItem(
-          '@GoMarket:products',
-        );
+      // await AsyncStorage.removeItem('@GoMarket:products');
+      const productsFromAsyncStorage = await AsyncStorage.getItem(
+        '@GoMarket:products',
+      );
 
-        if (productsFromAsyncStorage) {
-          setProducts(JSON.parse(productsFromAsyncStorage));
-        }
-      } catch (err) {
-        throw new Error(err.message);
+      if (productsFromAsyncStorage) {
+        setProducts(JSON.parse(productsFromAsyncStorage));
       }
     }
     loadProducts();
   }, []);
 
-  const increment = useCallback(async id => {}, []);
+  useEffect(() => {
+    async function storeProducts(): Promise<void> {
+      await AsyncStorage.setItem(
+        '@GoMarket:products',
+        JSON.stringify(products),
+      );
+    }
+    storeProducts();
+  }, [products]);
+
+  const increment = useCallback(async id => {
+    console.log('increment');
+  }, []);
 
   const decrement = useCallback(async id => {
     // TODO DECREMENTS A PRODUCT QUANTITY IN THE CART
@@ -53,30 +62,25 @@ const CartProvider: React.FC = ({ children }) => {
 
   const addToCart = useCallback(
     async product => {
-      try {
-        if (products === undefined) {
-          setProducts({
-            ...product,
-            quantity: 1,
-          });
-          await AsyncStorage.setItem(
-            '@GoMarket:products',
-            JSON.stringify(products),
-          );
-        } else {
-          const hasProduct = products.filter(item => item.id === product.id);
+      const productsOfStorage = await AsyncStorage.getItem(
+        '@GoMarket:products',
+      );
 
-          if (hasProduct) {
-            increment(product.id);
-          }
-          await AsyncStorage.setItem(
-            '@GoMarket:products',
-            JSON.stringify([...products, { ...product, quantity: 1 }]),
-          );
+      if (productsOfStorage) {
+        const parsedProducts: Product[] = JSON.parse(productsOfStorage);
+        const hasProduct = parsedProducts.some(item => item.id === product.id);
+
+        if (hasProduct) {
+          return increment(product.id);
         }
-      } catch (err) {
-        throw new Error(err.message);
       }
+      const newProduct: Product = {
+        ...product,
+        quantity: 1,
+      };
+
+      setProducts([...products, newProduct]);
+      console.log(products);
     },
     [increment, products],
   );
