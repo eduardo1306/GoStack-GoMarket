@@ -62,12 +62,10 @@ const CartProvider: React.FC = ({ children }) => {
 
   const addToCart = useCallback(
     async product => {
-      const productsOfStorage = await AsyncStorage.getItem(
-        '@GoMarket:products',
-      );
+      const productsData = await AsyncStorage.getItem('@GoMarket:products');
 
-      if (productsOfStorage) {
-        const parsedProducts: Product[] = JSON.parse(productsOfStorage);
+      if (productsData) {
+        const parsedProducts: Product[] = JSON.parse(productsData);
         const hasProduct = parsedProducts.some(item => item.id === product.id);
 
         if (hasProduct) {
@@ -79,8 +77,7 @@ const CartProvider: React.FC = ({ children }) => {
         quantity: 1,
       };
 
-      setProducts([...products, newProduct]);
-      console.log(products);
+      return setProducts([...products, newProduct]);
     },
     [increment, products],
   );
