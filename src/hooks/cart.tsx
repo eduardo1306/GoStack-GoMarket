@@ -30,7 +30,6 @@ const CartProvider: React.FC = ({ children }) => {
 
   useEffect(() => {
     async function loadProducts(): Promise<void> {
-      // await AsyncStorage.removeItem('@GoMarket:products');
       const productsFromAsyncStorage = await AsyncStorage.getItem(
         '@GoMarket:products',
       );
@@ -52,34 +51,47 @@ const CartProvider: React.FC = ({ children }) => {
     storeProducts();
   }, [products]);
 
-  const increment = useCallback(async id => {
-    console.log('increment');
-  }, []);
+  const addToCart = useCallback(async product => {
+    setProducts(state => {
+      const productsData = [...state];
+      const findProduct = productsData.find(item => item.id === product.id);
 
-  const decrement = useCallback(async id => {
-    // TODO DECREMENTS A PRODUCT QUANTITY IN THE CART
-  }, []);
-
-  const addToCart = useCallback(
-    async product => {
-      const productsData = await AsyncStorage.getItem('@GoMarket:products');
-
-      if (productsData) {
-        const parsedProducts: Product[] = JSON.parse(productsData);
-        const hasProduct = parsedProducts.some(item => item.id === product.id);
-
-        if (hasProduct) {
-          return increment(product.id);
-        }
+      if (!findProduct) {
+        return [...productsData, { ...product, quantity: 1 }];
       }
-      const newProduct: Product = {
-        ...product,
-        quantity: 1,
-      };
 
-      return setProducts([...products, newProduct]);
+      if (findProduct.quantity) {
+        findProduct.quantity += 1;
+      }
+
+      return [...productsData];
+    });
+  }, []);
+
+  const increment = useCallback(
+    async id => {
+      const newState = [...products];
+      const product = newState.find(item => item.id === id);
+      if (product && product.quantity) {
+        product.quantity += 1;
+        setProducts(newState);
+      }
     },
-    [increment, products],
+    [products],
+  );
+
+  const decrement = useCallback(
+    async id => {
+      const newState = [...products];
+      const product = newState.find(item => item.id === id);
+
+      if (product && product.quantity && product.quantity > 1) {
+        product.quantity -= 1;
+
+        setProducts(newState);
+      }
+    },
+    [products],
   );
 
   const value = React.useMemo(
